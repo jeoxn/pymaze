@@ -87,17 +87,24 @@ def draw_button(screen, text, rect, color):
     text_surface = font.render(text, True, (255, 255, 255))
     screen.blit(text_surface, (rect[0] + 10, rect[1] + 10))
 
+def draw_text(screen, text, position, color):
+    font = pygame.font.Font(None, 36)
+    text_surface = font.render(text, True, color)
+    screen.blit(text_surface, position)
+
 def main():
     pygame.init()
     cell_size = 25
     width, height = 25, 25
-    screen_width, screen_height = width * cell_size, height * cell_size + 50
+    screen_width, screen_height = width * cell_size, height * cell_size + 80
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Maze Generator")
 
     maze = Maze(width, height, cell_size)
-    button_rect = pygame.Rect(10, screen_height - 40, 100, 30)
+    button_rect = pygame.Rect(10, screen_height - 50, 100, 30)
+    prompt_rect = pygame.Rect(120, screen_height - 50, 300, 30)
     player_pos = [0, 0]
+    win = False
 
     running = True
     while running:
@@ -108,24 +115,31 @@ def main():
                 if button_rect.collidepoint(event.pos):
                     maze.generate_maze()
                     player_pos = [0, 0]
+                    win = False
             elif event.type == pygame.KEYDOWN:
                 x, y = player_pos
-                if event.key == pygame.K_UP and y > 0 and not maze.maze[y][x]['top']:
-                    player_pos = [x, y - 1]
-                elif event.key == pygame.K_DOWN and y < height - 1 and not maze.maze[y][x]['bottom']:
-                    player_pos = [x, y + 1]
-                elif event.key == pygame.K_LEFT and x > 0 and not maze.maze[y][x]['left']:
-                    player_pos = [x - 1, y]
-                elif event.key == pygame.K_RIGHT and x < width - 1 and not maze.maze[y][x]['right']:
-                    player_pos = [x + 1, y]
-                if player_pos == [width - 1, height - 1]:
+                if not win:
+                    if event.key == pygame.K_UP and y > 0 and not maze.maze[y][x]['top']:
+                        player_pos = [x, y - 1]
+                    elif event.key == pygame.K_DOWN and y < height - 1 and not maze.maze[y][x]['bottom']:
+                        player_pos = [x, y + 1]
+                    elif event.key == pygame.K_LEFT and x > 0 and not maze.maze[y][x]['left']:
+                        player_pos = [x - 1, y]
+                    elif event.key == pygame.K_RIGHT and x < width - 1 and not maze.maze[y][x]['right']:
+                        player_pos = [x + 1, y]
+                    if player_pos == [width - 1, height - 1]:
+                        win = True
+                elif event.key == pygame.K_SPACE and win:
                     maze.generate_maze()
                     player_pos = [0, 0]
+                    win = False
 
         screen.fill((0, 0, 0))
         maze.draw_maze(screen)
         pygame.draw.circle(screen, (0, 0, 255), (player_pos[0] * cell_size + cell_size // 2 + 1, player_pos[1] * cell_size + cell_size // 2 + 1), cell_size // 2 - 4)
         draw_button(screen, "Shuffle", button_rect, (0, 128, 0))
+        if win:
+            draw_text(screen, "You Win! Press SPACE to shuffle.", prompt_rect.topleft, (255, 255, 255))
         pygame.display.flip()
 
     pygame.quit()
